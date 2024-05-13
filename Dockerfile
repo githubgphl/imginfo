@@ -10,3 +10,7 @@ RUN wget -O HDF5Plugin-master.zip https://github.com/dectris/HDF5Plugin/archive/
 RUN wget -O HDF5-External-Filter-Plugins-master.zip https://github.com/nexusformat/HDF5-External-Filter-Plugins/archive/refs/heads/master.zip && unzip HDF5-External-Filter-Plugins-master.zip
 
 RUN make
+
+RUN apt-get update && apt-get -y install python3.11 python3.11-venv
+RUN python3.11 -m venv .venv
+RUN .venv/bin/pip install --upgrade pip wheel
