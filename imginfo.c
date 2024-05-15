@@ -891,6 +891,18 @@ int get_header_eiger(const char* path, const int imgnum, image_header* h)
     if (detector_number != NULL) {
       h->detn = detector_number;
     }
+    else {
+      // can we get "some" other description?
+      if (iverb>2)         printf(" ... will read /entry/instrument/name\n");
+      detector_number      = hdf5_read_char(fid,"/entry/instrument/name");
+      if (detector_number != NULL) {
+        h->detn = detector_number;
+        printf("\n WARNING: item \"/entry/instrument/name\" is not a good place to find out about a specific detector - but it seems the best (only?) information we have here ...\n\n");
+      }
+      else {
+        printf("\n WARNING: there doesn't seem to be any information available to define a detector (serial) number!!\n\n");
+      }
+    }
   }
 
   if (iverb>2)              printf(" ... will read /entry/instrument/detector/sensor_material\n");
@@ -939,7 +951,7 @@ int get_header_eiger(const char* path, const int imgnum, image_header* h)
     // Diamond files (image_9264_master.h5, 20181105 12:56) don't have that field
     char *axes = hdf5_read_group_attribute(fid,"/entry/data","axes");
     if (iverb>2) printf("     axes = \"%s\"\n",axes);
-    if ( axes != NULL && strcmp(axes,"omega")==0 ) {
+    if ( axes != NULL && strncmp(axes,"omega",5)==0 ) {
       if (iverb>2) printf("     will determine nimages from /entry/data/omega\n");
       nimages     = hdf5_read_dataset_size(fid,"/entry/data/omega");
       if (iverb>2) printf("     nimages = \"%d\"\n",nimages);
@@ -1348,11 +1360,11 @@ int get_header_eiger(const char* path, const int imgnum, image_header* h)
 	  if (iverb>2) printf("     axes undefined?\n");
 	  check_for_omega = 1;
 	}
-	else if (strcmp(axes,"omega")==0 ) {
+	else if (strncmp(axes,"omega",5)==0 ) {
 	  check_for_omega = 1;
 	}
         // Diamond files (Mpro-P1623_2_master.h5, I04-1, 20210619 06:17) named that differently:
-	else if (strcmp(axes,"gonomega")==0 ) {
+	else if (strncmp(axes,"gonomega",8)==0 ) {
 	  check_for_omega = 2;
           strcpy(omega_str,"/entry/data/gonomega");
 	}
