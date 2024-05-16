@@ -1,0 +1,25 @@
+FROM ubuntu:22.04
+
+ADD . /imginfo/
+
+WORKDIR "/imginfo" 
+
+RUN sed -i -e 's/^HXXFLAGS = -O2 -Wall/HXXFLAGS = -g -Wall/' Makefile
+RUN sed -i -e 's/^HCCFLAGS = -O2 -Wall/HCCFLAGS = -g -Wall/' Makefile
+RUN apt-get update && apt-get -y install hdf5-helpers wget unzip build-essential libbz2-dev file vim less zlib1g-dev automake libtool gdb
+RUN wget -O bitshuffle-master.zip https://github.com/kiyo-masui/bitshuffle/archive/refs/heads/master.zip && unzip bitshuffle-master.zip
+RUN wget -O HDF5Plugin-master.zip https://github.com/dectris/HDF5Plugin/archive/refs/heads/master.zip && unzip HDF5Plugin-master.zip
+RUN wget -O HDF5-External-Filter-Plugins-master.zip https://github.com/nexusformat/HDF5-External-Filter-Plugins/archive/refs/heads/master.zip && unzip HDF5-External-Filter-Plugins-master.zip
+
+RUN sed -i -e 's/^# deb-src/deb-src/' /etc/apt/sources.list
+
+WORKDIR /usr/src
+RUN apt-get update && apt-get source libhdf5-dev
+WORKDIR /usr/src/hdf5-1.10.7+repack
+RUN autoreconf
+RUN ./configure --with-flavor=x86_64-linux-gnu --prefix=/usr --enable-build-mode=debug --enable-cxx
+RUN make && make install
+
+WORKDIR /imginfo
+
+RUN make
