@@ -70,6 +70,10 @@ int iverb = 0;
 int buffer_size = 0;
 int get_header_iverb = 1;
 int h5check = 0;
+int return_exit_code_on_error = 0;
+
+//0 for successful exit, 2 for error finding oscillation axis/angles
+int exit_code = 0;
 
 vector<string> tokenise(const char* line)
 {
@@ -469,17 +473,19 @@ void print_help() {
   printf("\n");
   printf(" USAGE: imginfo [-v|-h] [-detid] [-[no]norm] [-h5check] <file-1> [... <file-N>]\n");
   printf("\n");
-  printf("        -v                      : increase verbosity\n");
+  printf("        -v                          : increase verbosity\n");
   printf("\n");
-  printf("        -h                      : this help message\n");
+  printf("        -h                          : this help message\n");
   printf("\n");
-  printf("        -detid                  : extract and print detector ID (serial number) if available\n");
+  printf("        -detid                      : extract and print detector ID (serial number) if available\n");
   printf("\n");
-  printf("        -[no]norm               : normalise (or not) angular ranges into 0..360 range (default = take values as-is)\n");
+  printf("        -[no]norm                   : normalise (or not) angular ranges into 0..360 range (default = take values as-is)\n");
   printf("\n");
-  printf("        -h5check                : some additional checks on HDF5 files\n");
+  printf("        -h5check                    : some additional checks on HDF5 files\n");
   printf("\n");
-  printf("        <file-N>                : HDF5 (master) file\n");
+  printf("        -return_exit_code_on_error  : enable exit code 2 being returned upon being unable to find oscillation angle/axis\n");
+  printf("\n");
+  printf("        <file-N>                    : HDF5 (master) file\n");
   printf("\n");
 }
 
@@ -542,6 +548,11 @@ int main(int argc, char *argv[])
       if (iverb>1) printf(" Will perform additional checks on HDF5 files\n");
       *argv++;
     }
+    else if (strcmp(*argv,"-return_exit_code_on_error")==0) {
+      return_exit_code_on_error++;
+      if (iverb>1) printf(" Will return non-zero exit code on error\n");
+      *argv++;
+    }
     else {
 
       if (do_copyright==1) {
@@ -580,7 +591,7 @@ int main(int argc, char *argv[])
 
   }
   if (nfil>0) {
-    exit(EXIT_SUCCESS);
+    exit(exit_code);
   } else {
     if (do_copyright==1) {
       print_copyright(full_copyright);
@@ -2342,6 +2353,9 @@ void print_header(image_header *h, int idet, int inorm) {
   else if (nosc<1) {
     printf("\n");
     printf(" WARNING: unable to find oscillation axis/angles !!!\n");
+    if (return_exit_code_on_error) {
+      exit_code = 2;
+    }
   }
   printf("\n\n");
 }
